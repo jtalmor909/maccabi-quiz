@@ -1,0 +1,475 @@
+<title>מכירים את הצהובים</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700&family=Bebas+Neue&display=swap">
+<style>
+/* Layout: one column "matchday" board. A yellow jersey back is the question; answers sit under it like a team sheet. */
+:root {
+  --bg: #F3F5FB;
+  --surface: #FFFFFF;
+  --ink: #0B1F4D;
+  --muted: #56658A;
+  --line: #D9DFEE;
+  --blue: #1239A6;
+  --yellow: #FFD21F;
+  --yellow-soft: #FFF3BF;
+  --shirt: #FFD21F;
+  --shirt-trim: #0B2A7A;
+  --shirt-ink: #0B2A7A;
+  --good: #187A44;
+  --good-bg: #DDF3E6;
+  --bad: #B92D2A;
+  --bad-bg: #FBE1E0;
+  --font-display: "Secular One", "Assistant", "Arial Hebrew", sans-serif;
+  --font-body: "Assistant", "Arial Hebrew", "Segoe UI", sans-serif;
+  --font-num: "Bebas Neue", "Oswald", Impact, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #061029; --surface: #0D1B42; --ink: #EEF2FF; --muted: #9BA9D0; --line: #22356C;
+    --blue: #8FB0FF; --yellow: #FFD21F; --yellow-soft: #3A3510;
+    --good: #4FD58C; --good-bg: #0F3A26; --bad: #FF7B76; --bad-bg: #44191B;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #061029; --surface: #0D1B42; --ink: #EEF2FF; --muted: #9BA9D0; --line: #22356C;
+  --blue: #8FB0FF; --yellow: #FFD21F; --yellow-soft: #3A3510;
+  --good: #4FD58C; --good-bg: #0F3A26; --bad: #FF7B76; --bad-bg: #44191B;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.5; }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 20px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.brand h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 7vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; }
+.brand h1 span { background: linear-gradient(transparent 58%, var(--yellow) 58%, var(--yellow) 92%, transparent 92%); padding-inline: 2px; }
+.brand p { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+.meter { min-width: 180px; flex: 0 1 220px; }
+.meter .lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+.meter .lbl b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--yellow); border-inline-start: 0; transition: width .5s ease; }
+
+nav.tabs { display: flex; gap: 6px; border-bottom: 2px solid var(--line); }
+nav.tabs button { background: none; border: 0; padding: 10px 14px; font-family: var(--font-display); font-size: 18px; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--yellow); }
+
+.modes { display: flex; gap: 8px; flex-wrap: wrap; }
+.mode { border: 1.5px solid var(--line); background: var(--surface); border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 15px; }
+.mode[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.board { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+.hud { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.hud b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.pips { display: flex; gap: 4px; }
+.pips i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.pips i.ok { background: var(--good); }
+.pips i.no { background: var(--bad); }
+.pips i.now { background: var(--yellow); box-shadow: 0 0 0 2px var(--ink) inset; }
+
+.stage { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 20px; align-items: center; }
+.stage > * { min-width: 0; }
+.jersey { width: 100%; max-width: 220px; aspect-ratio: 1; justify-self: center; }
+.jersey svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(11, 31, 77, .18)); }
+.q h2 { font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.2; margin: 0 0 6px; text-wrap: balance; }
+.q .sub { color: var(--muted); margin: 0; font-size: 15px; }
+.clues { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.clues li { display: flex; gap: 10px; align-items: baseline; padding: 6px 10px; border-radius: 8px; background: var(--yellow-soft); }
+.clues li span { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); min-width: 52px; }
+.clues li b { font-size: 17px; }
+.clues li.locked { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); }
+.hintbtn { margin-top: 10px; background: none; border: 1.5px solid var(--ink); border-radius: 99px; padding: 5px 14px; font-weight: 700; font-size: 14px; }
+
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ans { display: flex; align-items: center; gap: 12px; text-align: start; border: 1.5px solid var(--line); background: var(--bg); border-radius: 12px; padding: 12px 14px; font-size: 18px; font-weight: 700; min-height: 58px; transition: border-color .15s, transform .1s; }
+.ans:hover:not(:disabled) { border-color: var(--ink); }
+.ans:active:not(:disabled) { transform: scale(.98); }
+.ans kbd { font-family: var(--font-num); font-size: 16px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; line-height: 1.4; }
+.ans.big { justify-content: center; font-family: var(--font-num); font-size: 34px; font-weight: 400; }
+.ans.big kbd { display: none; }
+.ans:disabled { cursor: default; }
+.ans.right { border-color: var(--good); background: var(--good-bg); color: var(--good); }
+.ans.wrong { border-color: var(--bad); background: var(--bad-bg); color: var(--bad); }
+
+.feedback { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.feedback p { margin: 0; min-width: 0; flex: 1 1 260px; }
+.feedback .verdict { font-family: var(--font-display); font-size: 19px; }
+.feedback.good .verdict { color: var(--good); }
+.feedback.bad .verdict { color: var(--bad); }
+.next { background: var(--ink); color: var(--bg); border: 0; border-radius: 99px; padding: 9px 22px; font-weight: 700; }
+
+.summary { text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.summary .score { font-family: var(--font-num); font-size: 96px; line-height: .9; }
+.summary .score small { font-size: 40px; color: var(--muted); }
+.summary h2 { font-family: var(--font-display); font-weight: 400; font-size: 26px; margin: 0; }
+.missed { width: 100%; text-align: start; display: flex; flex-direction: column; gap: 8px; }
+.missed h3 { font-size: 14px; letter-spacing: .06em; color: var(--muted); margin: 6px 0 0; }
+
+.row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.row .num { font-family: var(--font-num); font-size: 30px; width: 46px; height: 46px; border-radius: 10px; background: var(--shirt); color: var(--shirt-ink); display: grid; place-items: center; flex: none; line-height: 1; padding-top: 3px; }
+.row .who { min-width: 0; }
+.row .who b { display: block; font-size: 17px; }
+.row .who span { color: var(--muted); font-size: 14px; }
+
+.roster { display: flex; flex-direction: column; gap: 22px; }
+.coach { padding: 12px 14px; border-radius: 12px; background: var(--yellow-soft); font-size: 15px; }
+.group h3 { font-family: var(--font-display); font-weight: 400; font-size: 22px; margin: 0 0 10px; display: flex; gap: 8px; align-items: baseline; }
+.group h3 small { font-family: var(--font-body); font-size: 14px; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.card { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.card .num { font-family: var(--font-num); font-size: 34px; width: 52px; height: 52px; border-radius: 12px; background: var(--shirt); color: var(--shirt-ink); display: grid; place-items: center; flex: none; line-height: 1; padding-top: 4px; }
+.card .who { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.card .who b { font-size: 17px; line-height: 1.25; }
+.card .who span { color: var(--muted); font-size: 14px; }
+.card .who em { font-style: normal; font-size: 13px; color: var(--ink); background: var(--yellow-soft); border-radius: 6px; padding: 1px 6px; align-self: flex-start; margin-top: 3px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-inline-start: 6px; vertical-align: middle; background: var(--line); }
+.dot.known { background: var(--good); }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+.reset { background: none; border: 0; color: var(--muted); text-decoration: underline; font-size: 13px; padding: 0; }
+
+@media (max-width: 560px) {
+  .wrap { gap: 14px; padding-block: 12px 32px; }
+  header.top { gap: 10px; }
+  .brand h1 { font-size: 28px; }
+  .brand p { font-size: 14px; margin-top: 2px; }
+  .meter { flex: 1 1 100%; }
+  nav.tabs button { padding: 6px 12px; font-size: 17px; }
+  .modes { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+  .modes::-webkit-scrollbar { display: none; }
+  .mode { white-space: nowrap; flex: none; }
+  .hud { font-size: 13px; flex-wrap: wrap; }
+  .pips { order: 3; flex: 1 1 100%; justify-content: center; }
+  .stage { grid-template-columns: 1fr; gap: 8px; }
+  .jersey { max-width: 130px; }
+  .q h2 { font-size: 22px; }
+  .q { text-align: center; }
+  .clues li { text-align: start; }
+  .answers { grid-template-columns: 1fr; }
+  .ans { min-height: 52px; font-size: 17px; }
+  .answers.nums { grid-template-columns: 1fr 1fr; }
+  .board { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.pop { animation: pop .35s ease; }
+@keyframes pop { from { transform: scale(.94) rotate(-2deg); } to { transform: none; } }
+</style>
+
+<div class="wrap" dir="rtl" lang="he">
+  <header class="top">
+    <div class="brand">
+      <h1>מכירים את <span>הצהובים</span>?</h1>
+      <p>מכבי תל אביב בכדורגל, סגל 2026/27</p>
+    </div>
+    <div class="meter" aria-label="כמה שחקנים כבר למדת">
+      <div class="lbl"><span>שחקנים שאתה מכיר</span><b id="knownCount">0/0</b></div>
+      <div class="bar"><i id="knownBar"></i></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-play" aria-selected="true">משחק</button>
+    <button role="tab" id="tab-roster" aria-selected="false">הסגל</button>
+  </nav>
+
+  <section id="view-play" class="play" style="display:flex;flex-direction:column;gap:14px">
+    <div class="modes" role="group" aria-label="סוג משחק">
+      <button class="mode" data-mode="num">המספר על הגב</button>
+      <button class="mode" data-mode="name">מה המספר שלו?</button>
+      <button class="mode" data-mode="clue">מי אני?</button>
+      <button class="mode" data-mode="pos">איפה הוא משחק?</button>
+    </div>
+    <div class="board" id="board" aria-live="polite"></div>
+  </section>
+
+  <section id="view-roster" class="roster" hidden></section>
+</div>
+
+<script>
+document.documentElement.lang = 'he';
+document.documentElement.dir = 'rtl';
+
+const POS = { GK: 'שוער', DF: 'הגנה', MF: 'קישור', FW: 'התקפה' };
+const POS_GROUP = { GK: 'שוערים', DF: 'הגנה', MF: 'קישור', FW: 'התקפה' };
+
+// Squad: UEFA Europa League 2026/27 registration + September 2026 signings (club site / Hebrew Wikipedia).
+const PLAYERS = [
+  { id: 'melika', n: 22, name: 'אופק מליקה', shirt: 'מליקה', pos: 'GK', nat: 'ישראל', age: 21 },
+  { id: 'trau', n: 50, name: 'עידן טראו', shirt: 'טראו', pos: 'GK', nat: 'ישראל', age: 19 },
+  { id: 'saadya', n: 51, name: 'שליו סעדיה', shirt: 'סעדיה', pos: 'GK', nat: 'ישראל', age: 20 },
+  { id: 'mishpati', n: 90, name: 'רועי משפתי', shirt: 'משפתי', pos: 'GK', nat: 'ישראל', age: 33, fact: 'השוער הוותיק בסגל' },
+
+  { id: 'tavernier', n: 2, name: "ג'יימס טברנייר", shirt: 'טברנייר', pos: 'DF', nat: 'אנגליה', age: 34, fact: "קפטן ריינג'רס לשעבר, הצטרף בספטמבר 2026. השחקן המבוגר בסגל" },
+  { id: 'revivo', n: 3, name: 'רועי רביבו', shirt: 'רביבו', pos: 'DF', nat: 'ישראל', age: 23 },
+  { id: 'camara', n: 5, name: 'מוחמד עלי קמארה', shirt: 'קמארה', pos: 'DF', nat: 'גינאה', age: 29 },
+  { id: 'asante', n: 6, name: 'טייריס אסאנטה', shirt: 'אסאנטה', pos: 'DF', nat: 'הולנד', age: 24 },
+  { id: 'shlomo', n: 13, name: 'רז שלמה', shirt: 'שלמה', pos: 'DF', nat: 'ישראל', age: 27 },
+  { id: 'gropper', n: 14, name: 'דני גרופר', shirt: 'גרופר', pos: 'DF', nat: 'ישראל', age: 27 },
+  { id: 'benharosh', n: 21, name: 'נועם בן הרוש', shirt: 'בן הרוש', pos: 'DF', nat: 'ישראל', age: 21 },
+  { id: 'schwartz', n: 24, name: 'נועם שוורץ', shirt: 'שוורץ', pos: 'DF', nat: 'ישראל', age: 20 },
+  { id: 'rosen', n: 25, name: 'שחר רוזן', shirt: 'רוזן', pos: 'DF', nat: 'ישראל', age: 24 },
+  { id: 'benhamo', n: 41, name: 'איתי בן חמו', shirt: 'בן חמו', pos: 'DF', nat: 'ישראל', age: 24 },
+
+  { id: 'jehezkel', n: 11, name: 'שגיב יחזקאל', shirt: 'יחזקאל', pos: 'MF', alt: ['DF'], nat: 'ישראל', age: 31, fact: 'משחק גם כמגן' },
+  { id: 'kanichowsky', n: 16, name: 'גבי קניקובסקי', shirt: 'קניקובסקי', pos: 'MF', nat: 'ישראל', age: 29, fact: 'חזר למכבי ב-2026 מפרנצווארוש' },
+  { id: 'belic', n: 17, name: "כריסטיאן בליץ'", shirt: "בליץ'", pos: 'MF', nat: 'סרביה', age: 25 },
+  { id: 'glazer', n: 18, name: 'דן גלזר', shirt: 'גלזר', pos: 'MF', nat: 'ישראל', age: 30 },
+  { id: 'madmon', n: 19, name: 'אלעד מדמון', shirt: 'מדמון', pos: 'MF', alt: ['FW'], nat: 'ישראל', age: 22 },
+  { id: 'porat', n: 20, name: 'אניס פורת עיאש', shirt: 'פורת עיאש', pos: 'MF', nat: 'ישראל', age: 21 },
+  { id: 'azo', n: 23, name: 'אורי אזו', shirt: 'אזו', pos: 'MF', nat: 'ישראל', age: 21 },
+  { id: 'sissokho', n: 28, name: 'איסוף סיסוקו', shirt: 'סיסוקו', pos: 'MF', nat: 'מאלי', age: 24 },
+  { id: 'noy', n: 30, name: 'איתמר נוי', shirt: 'נוי', pos: 'MF', nat: 'ישראל', age: 25 },
+  { id: 'layous', n: 33, name: 'הישאם לאיוס', shirt: 'לאיוס', pos: 'MF', alt: ['FW'], nat: 'ישראל', age: 25 },
+  { id: 'shahar', n: 36, name: 'עידו שחר', shirt: 'שחר', pos: 'MF', nat: 'ישראל', age: 25 },
+  { id: 'peretz', n: 42, name: 'דור פרץ', shirt: 'פרץ', pos: 'MF', nat: 'ישראל', age: 31, fact: 'קפטן הקבוצה' },
+  { id: 'asres', n: 59, name: 'לוטם אסרס', shirt: 'אסרס', pos: 'MF', nat: 'ישראל', age: 19 },
+  { id: 'davida', n: 77, name: 'אושר דוידה', shirt: 'דוידה', pos: 'MF', alt: ['FW'], nat: 'ישראל', age: 25 },
+
+  { id: 'sokler', n: 9, name: 'אסטר סוקלר', shirt: 'סוקלר', pos: 'FW', nat: 'סלובניה', age: 27 },
+  { id: 'andrade', n: 10, name: 'קרווין אנדרדה', shirt: 'אנדרדה', pos: 'FW', nat: 'ונצואלה', age: 21 },
+  { id: 'malede', n: 15, name: 'יונס מלדה', shirt: 'מלדה', pos: 'FW', nat: 'ישראל', age: 26 },
+  { id: 'baye', n: 27, name: 'אוראל באייה', shirt: 'באייה', pos: 'FW', nat: 'ישראל', age: 22 },
+  { id: 'varela', n: 29, name: 'הליו וארלה', shirt: 'וארלה', pos: 'FW', alt: ['MF'], nat: 'כף ורדה', age: 24 },
+  { id: 'bensimon', n: 60, name: 'עילאי בן סימון', shirt: 'בן סימון', pos: 'FW', nat: 'ישראל', age: 17, fact: 'השחקן הצעיר בסגל' },
+  { id: 'nicolaescu', n: 98, name: 'יון ניקולאסקו', shirt: 'ניקולאסקו', pos: 'FW', nat: 'מולדובה', age: 28 },
+];
+const BY_ID = Object.fromEntries(PLAYERS.map(p => [p.id, p]));
+const ROUND = 10;
+const STORE_KEY = 'mta-quiz-v1';
+
+const MODES = {
+  num:  { title: 'של מי המספר הזה?', sub: 'הנה הגב של החולצה. מי לובש אותה?' },
+  name: { title: 'מה המספר על החולצה?', sub: 'תבחר את המספר הנכון.' },
+  clue: { title: 'מי אני?', sub: 'כל רמז נוסף מוריד נקודה. 3 נקודות בלי רמזים נוספים.' },
+  pos:  { title: 'באיזו עמדה הוא משחק?', sub: 'שוער, הגנה, קישור או התקפה.' },
+};
+
+// ---------- per-viewer progress ----------
+let mastery = {};
+try { mastery = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {}; } catch (e) { mastery = {}; }
+function saveMastery() { try { localStorage.setItem(STORE_KEY, JSON.stringify(mastery)); } catch (e) {} }
+function isKnown(id) { return (mastery[id]?.s || 0) >= 2; }
+function record(id, ok) {
+  const m = mastery[id] || { c: 0, w: 0, s: 0 };
+  if (ok) { m.c++; m.s++; } else { m.w++; m.s = 0; }
+  mastery[id] = m; saveMastery(); renderMeter();
+}
+function renderMeter() {
+  const k = PLAYERS.filter(p => isKnown(p.id)).length;
+  document.getElementById('knownCount').textContent = `${k}/${PLAYERS.length}`;
+  document.getElementById('knownBar').style.width = `${(k / PLAYERS.length) * 100}%`;
+}
+
+// ---------- helpers ----------
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function weightedPick(pool, exclude) {
+  const list = pool.filter(p => !exclude.has(p.id));
+  const src = list.length ? list : pool;
+  const w = src.map(p => { const m = mastery[p.id]; return !m ? 3 : isKnown(p.id) ? 1 : 4; });
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < src.length; i++) { r -= w[i]; if (r <= 0) return src[i]; }
+  return src[src.length - 1];
+}
+function distractors(target, count, preferSamePos) {
+  const others = PLAYERS.filter(p => p.id !== target.id);
+  const same = shuffle(others.filter(p => p.pos === target.pos));
+  const rest = shuffle(others.filter(p => p.pos !== target.pos));
+  const take = preferSamePos ? same.concat(rest) : shuffle(same.slice(0, 2).concat(rest)).concat(same.slice(2));
+  return take.slice(0, count);
+}
+function infoLine(p) {
+  return `${POS[p.pos]} · ${p.nat} · בן ${p.age}`;
+}
+
+function jerseySVG(nameText, numText) {
+  const nm = esc(nameText);
+  const nameSize = nameText.length > 8 ? 15 : nameText.length > 5 ? 18 : 21;
+  return `<svg viewBox="0 0 200 200" role="img" aria-label="חולצה ${nm} ${esc(numText)}">
+    <path d="M62 22 L84 13 Q100 25 116 13 L138 22 L184 48 L168 88 L148 79 L148 186 L52 186 L52 79 L32 88 L16 48 Z" fill="var(--shirt)" stroke="var(--shirt-trim)" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M84 13 Q100 25 116 13" fill="none" stroke="var(--shirt-trim)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M168 88 L184 48" stroke="var(--shirt-trim)" stroke-width="9" stroke-linecap="round"/>
+    <path d="M32 88 L16 48" stroke="var(--shirt-trim)" stroke-width="9" stroke-linecap="round"/>
+    <text x="100" y="64" text-anchor="middle" font-family="Secular One, Assistant, sans-serif" font-size="${nameSize}" fill="var(--shirt-ink)" direction="rtl">${nm}</text>
+    <text x="100" y="162" text-anchor="middle" font-family="Bebas Neue, Oswald, Impact, sans-serif" font-size="92" fill="var(--shirt-ink)">${esc(numText)}</text>
+  </svg>`;
+}
+
+// ---------- game state ----------
+let state = { mode: 'num', q: 0, score: 0, max: 0, streak: 0, best: 0, results: [], used: new Set(), missed: [], cur: null };
+
+function newRound(mode) {
+  state = { mode: mode || state.mode, q: 0, score: 0, max: 0, streak: 0, best: 0, results: [], used: new Set(), missed: [], cur: null };
+  document.querySelectorAll('.mode').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
+  nextQuestion();
+}
+
+function nextQuestion() {
+  if (state.q >= ROUND) return renderSummary();
+  const mode = state.mode;
+  const pool = mode === 'pos' ? PLAYERS.filter(p => !p.alt) : PLAYERS;
+  const p = weightedPick(pool, state.used);
+  state.used.add(p.id);
+  let options;
+  if (mode === 'name') {
+    options = shuffle([p, ...distractors(p, 3, false)]).map(o => ({ key: o.id, label: String(o.n), correct: o.id === p.id }));
+  } else if (mode === 'pos') {
+    options = ['GK', 'DF', 'MF', 'FW'].map(k => ({ key: k, label: POS[k], correct: k === p.pos }));
+  } else {
+    options = shuffle([p, ...distractors(p, 3, mode === 'clue')]).map(o => ({ key: o.id, label: o.name, correct: o.id === p.id }));
+  }
+  state.cur = { p, options, answered: false, clues: 2 };
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const { p, options, answered, clues } = state.cur;
+  const m = MODES[state.mode];
+  const board = document.getElementById('board');
+  let jersey;
+  if (state.mode === 'num') jersey = jerseySVG(answered ? p.shirt : '?', p.n);
+  else if (state.mode === 'name') jersey = jerseySVG(p.shirt, answered ? p.n : '?');
+  else if (state.mode === 'pos') jersey = jerseySVG(p.shirt, p.n);
+  else jersey = jerseySVG(answered ? p.shirt : '?', answered ? p.n : '?');
+
+  let title = m.title;
+  if (state.mode === 'name' || state.mode === 'pos') title = `${p.name}: ${state.mode === 'name' ? 'מה המספר שלו?' : 'באיזו עמדה?'}`;
+
+  let clueHtml = '';
+  if (state.mode === 'clue') {
+    const all = [['עמדה', POS[p.pos]], ['לאום', p.nat], ['גיל', String(p.age)], ['מספר', String(p.n)]];
+    clueHtml = '<ul class="clues">' + all.map(([k, v], i) =>
+      i < clues || answered ? `<li><span>${k}</span><b>${esc(v)}</b></li>` : `<li class="locked"><span>${k}</span>רמז נעול</li>`
+    ).join('') + '</ul>';
+    if (!answered && clues < 4) clueHtml += `<button class="hintbtn" id="hint">עוד רמז (−1 נקודה)</button>`;
+  }
+
+  const big = state.mode === 'name';
+  const ans = options.map((o, i) => {
+    let cls = 'ans' + (big ? ' big' : '');
+    if (answered) { if (o.correct) cls += ' right'; else if (o.key === state.cur.picked) cls += ' wrong'; }
+    return `<button class="${cls}" data-i="${i}" ${answered ? 'disabled' : ''}><kbd>${i + 1}</kbd>${esc(o.label)}</button>`;
+  }).join('');
+
+  let fb = '';
+  if (answered) {
+    const ok = state.cur.ok;
+    const extra = p.fact ? ` · ${esc(p.fact)}` : '';
+    fb = `<div class="feedback ${ok ? 'good' : 'bad'}">
+      <p><span class="verdict">${ok ? 'נכון!' : 'לא הפעם.'}</span> ${esc(p.name)}, מספר ${p.n}. ${esc(infoLine(p))}${extra}</p>
+      <button class="next" id="next">${state.q + 1 >= ROUND ? 'לתוצאות' : 'הבא'}</button>
+    </div>`;
+  }
+
+  const pips = Array.from({ length: ROUND }, (_, i) => {
+    const r = state.results[i];
+    return `<i class="${r === true ? 'ok' : r === false ? 'no' : i === state.q ? 'now' : ''}"></i>`;
+  }).join('');
+
+  board.innerHTML = `
+    <div class="hud"><span>שאלה <b>${state.q + 1}</b> מתוך ${ROUND}</span><div class="pips" aria-hidden="true">${pips}</div><span>נקודות <b>${state.score}</b> · רצף <b>${state.streak}</b></span></div>
+    <div class="stage">
+      <div class="jersey ${answered ? 'pop' : ''}">${jersey}</div>
+      <div class="q"><h2>${esc(title)}</h2><p class="sub">${esc(m.sub)}</p>${clueHtml}</div>
+    </div>
+    <div class="answers ${big ? 'nums' : ''}">${ans}</div>
+    ${fb}`;
+
+  board.querySelectorAll('.ans').forEach(b => b.addEventListener('click', () => answer(+b.dataset.i)));
+  const h = document.getElementById('hint');
+  if (h) h.addEventListener('click', () => { state.cur.clues++; renderQuestion(); });
+  const n = document.getElementById('next');
+  if (n) { n.addEventListener('click', advance); n.focus({ preventScroll: true }); }
+}
+
+function answer(i) {
+  const c = state.cur;
+  if (!c || c.answered) return;
+  const o = c.options[i];
+  if (!o) return;
+  c.answered = true; c.picked = o.key; c.ok = o.correct;
+  const pts = state.mode === 'clue' ? Math.max(1, 5 - c.clues) : 1;
+  state.max += state.mode === 'clue' ? 3 : 1;
+  if (o.correct) { state.score += pts; state.streak++; state.best = Math.max(state.best, state.streak); }
+  else { state.streak = 0; state.missed.push(c.p.id); }
+  state.results[state.q] = o.correct;
+  record(c.p.id, o.correct);
+  renderQuestion();
+}
+function advance() { if (!state.cur?.answered) return; state.q++; nextQuestion(); }
+
+function renderSummary() {
+  state.cur = null;
+  const pct = state.max ? state.score / state.max : 0;
+  const head = pct === 1 ? 'מושלם. אתה מכיר את הסגל.' : pct >= .7 ? 'יפה מאוד, כמעט שם.' : pct >= .4 ? 'בדרך הנכונה.' : 'עוד סיבוב או שניים ותכיר אותם.';
+  const missed = [...new Set(state.missed)].map(id => BY_ID[id]);
+  document.getElementById('board').innerHTML = `
+    <div class="summary">
+      <div class="score">${state.score}<small>/${state.max}</small></div>
+      <h2>${head}</h2>
+      <p class="note">רצף הכי ארוך: ${state.best}</p>
+      ${missed.length ? `<div class="missed"><h3>שחקנים לחזור עליהם</h3>${missed.map(rowHtml).join('')}</div>` : ''}
+      <button class="next" id="again">עוד סיבוב</button>
+    </div>`;
+  const a = document.getElementById('again');
+  a.addEventListener('click', () => newRound());
+  a.focus({ preventScroll: true });
+}
+function rowHtml(p) {
+  return `<div class="row"><div class="num">${p.n}</div><div class="who"><b>${esc(p.name)}</b><span>${esc(infoLine(p))}${p.fact ? ' · ' + esc(p.fact) : ''}</span></div></div>`;
+}
+
+// ---------- roster ----------
+function renderRoster() {
+  const el = document.getElementById('view-roster');
+  const groups = ['GK', 'DF', 'MF', 'FW'].map(k => {
+    const ps = PLAYERS.filter(p => p.pos === k).sort((a, b) => a.n - b.n);
+    return `<div class="group"><h3>${POS_GROUP[k]} <small>${ps.length} שחקנים</small></h3><div class="cards">${ps.map(p => `
+      <div class="card"><div class="num">${p.n}</div><div class="who">
+        <b>${esc(p.name)}<i class="dot ${isKnown(p.id) ? 'known' : ''}" title="${isKnown(p.id) ? 'אתה מכיר אותו' : 'עוד לא'}"></i></b>
+        <span>${esc(p.nat)} · בן ${p.age}${p.alt ? ' · גם ' + p.alt.map(a => POS[a]).join(', ') : ''}</span>
+        ${p.fact ? `<em>${esc(p.fact)}</em>` : ''}
+      </div></div>`).join('')}</div></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="coach">מאמן: <b>קני מילר</b> · קפטן: <b>דור פרץ</b> (42)</div>
+    ${groups}
+    <p class="note">נקודה ירוקה = ענית נכון על השחקן פעמיים ברצף. ההתקדמות נשמרת בדפדפן הזה בלבד. <button class="reset" id="reset">איפוס התקדמות</button></p>
+    <p class="note">הסגל לפי רישום אופ"א לליגה האירופית 2026/27 והחתמות ספטמבר 2026. גילאים נכון לאוקטובר 2026.</p>`;
+  document.getElementById('reset').addEventListener('click', e => {
+    if (e.target.dataset.armed) { mastery = {}; saveMastery(); renderMeter(); renderRoster(); }
+    else { e.target.dataset.armed = '1'; e.target.textContent = 'לחיצה נוספת תאפס הכל'; }
+  });
+}
+
+function showTab(t) {
+  const play = t === 'play';
+  document.getElementById('tab-play').setAttribute('aria-selected', String(play));
+  document.getElementById('tab-roster').setAttribute('aria-selected', String(!play));
+  document.getElementById('view-play').hidden = !play;
+  document.getElementById('view-play').style.display = play ? 'flex' : 'none';
+  document.getElementById('view-roster').hidden = play;
+  if (!play) renderRoster();
+}
+
+document.getElementById('tab-play').addEventListener('click', () => showTab('play'));
+document.getElementById('tab-roster').addEventListener('click', () => showTab('roster'));
+document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => newRound(b.dataset.mode)));
+document.addEventListener('keydown', e => {
+  if (document.getElementById('view-play').hidden || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (state.cur && !state.cur.answered && /^[1-4]$/.test(e.key)) { answer(+e.key - 1); e.preventDefault(); }
+  else if (e.key === 'Enter' && state.cur?.answered && document.activeElement?.id !== 'next') { advance(); e.preventDefault(); }
+});
+
+function start(saved) {
+  renderMeter();
+  newRound(saved && MODES[saved.mode] ? saved.mode : 'num');
+  if (saved && saved.tab === 'roster') showTab('roster');
+}
+window.claude?.hot?.snapshot?.(() => ({ mode: state.mode, tab: document.getElementById('view-roster').hidden ? 'play' : 'roster' }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
